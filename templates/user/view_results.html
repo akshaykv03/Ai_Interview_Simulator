@@ -1,0 +1,63 @@
+{% extends 'admin/adminhome.html' %}
+
+{% block content %}
+
+<div class="container mt-5">
+<br><br><br>
+    <h2>View Your Interview Results</h2>
+
+    {% if messages %}
+        {% for i in messages %}
+
+            <div class="alert alert-success">
+                {{ i }}
+            </div>
+
+        {% endfor %}
+    {% endif %}
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Result ID</th>
+                <th>Category</th>
+                <th>Status</th>
+                <th>Total Marks</th>
+                <th>Obtained Marks</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for req in results %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ req.category.name }}</td>
+                    <td>
+                        {% if req.status == "Malpractice" %}
+                            <span style="color: red;">{{ req.status }}</span>
+                        {% else %}
+                            {{ req.status }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if req.status == "Malpractice" %}
+                            <span style="color: red;">---</span>
+                        {% else %}
+                            {{ req.total_marks }}
+                        {% endif %}
+                        
+                    </td>
+                    <td>
+                        {% if req.status == "Malpractice" %}
+                            <span style="color: red;">---</span>
+                        {% else %}
+                            {{ req.obtained_marks }}
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+</div>
+
+{% endblock %}

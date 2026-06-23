@@ -1,0 +1,85 @@
+{% extends 'user/uhome.html' %}
+
+{% block content %}
+
+<br><br><br><br>
+
+<div class="container mt-5">
+
+    <h2>Select Interview Category</h2>
+
+    <div class="row">
+
+        {% for item in category_data %}
+
+        <div class="col-md-4 mb-4">
+
+            <div class="card shadow p-4">
+
+                <h4>
+
+                    {{ item.category.name }}
+
+                </h4>
+
+
+                {% if item.status == None %}
+
+                    <a href="/request-interview/{{ item.category.id }}/"
+                       class="btn btn-warning mt-3">
+
+                        Request Interview
+
+                    </a>
+
+
+                {% elif item.status == 'Pending' %}
+
+                    <button class="btn btn-secondary mt-3">
+
+                        Request Pending
+
+                    </button>
+
+
+                {% elif item.status == 'Approved' %}
+
+                    <a href="/start-interview/{{ item.category.id }}/"
+                       class="btn btn-success mt-3">
+
+                        Start Interview
+
+                    </a>
+
+
+                {% elif item.status == 'Rejected' %}
+
+                    <button class="btn btn-danger mt-3">
+
+                        You Are Rejected
+
+                    </button>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+</div>
+
+{% if messages %}
+    {% for i in messages %}
+
+        <script>
+            alert("{{ i }}");
+        </script>
+
+    {% endfor %}
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,453 @@
+{% extends 'user/uhome.html' %}
+
+{% block content %}
+
+<div class="container mt-5">
+
+    <h2 class="mb-4">
+        {{ category.name }} Interview
+    </h2>
+
+
+    <div class="card shadow p-3 mb-4">
+
+        <h4>Live Monitoring</h4>
+
+        <video id="video"
+               width="400"
+               height="300"
+               autoplay
+               class="border rounded">
+        </video>
+
+        <canvas id="canvas"
+                width="400"
+                height="300"
+                style="display:none;">
+        </canvas>
+
+        <h5 class="mt-3 text-danger"
+            id="warning">
+
+        </h5>
+
+        <h4 class="text-danger mt-3">
+
+            Warnings:
+            <span id="warning_count">
+            
+                0
+            
+            </span>/2
+        
+        </h4>
+
+    </div>
+
+    
+
+    <form method="POST">
+
+        {% csrf_token %}
+
+        {% for i in questions %}
+
+        <div class="card shadow p-4 mb-4">
+
+            <h5>
+                Question {{ forloop.counter }}
+            </h5>
+
+            <p>
+                {{ i.question }}
+            </p>
+
+            <!-- ANSWER TEXTAREA -->
+            <textarea
+                id="answer_{{ i.id }}"
+                name="answer_{{ i.id }}"
+                class="form-control"
+                rows="4"
+                placeholder="Your Answer"></textarea>
+
+            <!-- CHECK BUTTON -->
+            <button type="button"
+                    class="btn btn-warning mt-3"
+                    onclick="showValue('{{ i.id }}')">
+
+                Check Text
+
+            </button>
+
+            <!-- VOICE ANIMATION -->
+            <div class="voice-animation mt-3"
+                 id="voice_{{ i.id }}"
+                 style="display:none;">
+
+                <span></span>
+                <span></span>
+                <span></span>
+
+            </div>
+
+            <!-- RECORD BUTTONS -->
+            <div class="mt-3">
+
+                <button type="button"
+                        class="btn btn-success"
+                        onclick="startRecognition('{{ i.id }}')">
+
+                    🎤 Start Recording
+
+                </button>
+
+                <button type="button"
+                        class="btn btn-danger"
+                        onclick="stopRecognition('{{ i.id }}')">
+
+                    ⏹ Stop
+
+                </button>
+
+                <span id="status_{{ i.id }}"
+                      class="ms-3 fw-bold text-primary">
+
+                </span>
+
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+        <button type="submit"
+                class="btn btn-primary mb-5">
+
+            Submit Interview
+
+        </button>
+
+    </form>
+
+</div>
+
+
+<style>
+
+.voice-animation{
+    display:flex;
+    gap:5px;
+    align-items:center;
+}
+
+.voice-animation span{
+    width:8px;
+    height:25px;
+    background:#28a745;
+    border-radius:10px;
+    animation:wave 1s infinite ease-in-out;
+}
+
+.voice-animation span:nth-child(2){
+    animation-delay:0.2s;
+}
+
+.voice-animation span:nth-child(3){
+    animation-delay:0.4s;
+}
+
+@keyframes wave{
+
+    0%{
+        transform:scaleY(1);
+    }
+
+    50%{
+        transform:scaleY(2.5);
+    }
+
+    100%{
+        transform:scaleY(1);
+    }
+}
+
+</style>
+
+
+
+<script>
+
+function startRecognition(qid){
+
+    // CHECK SUPPORT
+    if (!('webkitSpeechRecognition' in window)) {
+
+        alert("Speech Recognition Not Supported");
+
+        return;
+    }
+
+    const recognition =
+        new webkitSpeechRecognition();
+
+    recognition.lang = "en-US";
+
+    recognition.continuous = false;
+
+    recognition.interimResults = false;
+
+    // START
+    recognition.start();
+
+    console.log("Recording started");
+
+    // STATUS
+    document.getElementById(
+        'status_' + qid
+    ).innerHTML = "Recording...";
+
+    // RESULT
+    recognition.addEventListener(
+        "result",
+        (event) => {
+
+            let transcript =
+                event.results[0][0].transcript;
+
+            console.log(
+                "Transcript:",
+                transcript
+            );
+
+            // INSERT TEXT
+            let textarea =
+                document.getElementById(
+                    'answer_' + qid
+                );
+
+            textarea.value = transcript;
+
+            // FORCE UPDATE
+            textarea.innerHTML = transcript;
+
+            alert(
+                "Inserted Successfully:\n\n"
+                + transcript
+            );
+        }
+    );
+
+    // END
+    recognition.addEventListener(
+        "end",
+        () => {
+
+            document.getElementById(
+                'status_' + qid
+            ).innerHTML = "Stopped";
+        }
+    );
+
+    // ERROR
+    recognition.addEventListener(
+        "error",
+        (event) => {
+
+            console.log(event.error);
+
+            alert(
+                "Speech Error: "
+                + event.error
+            );
+        }
+    );
+}
+
+
+
+function showValue(qid){
+
+    let value =
+        document.getElementById(
+            'answer_' + qid
+        ).value;
+
+    console.log(value);
+
+    alert(
+        "Textarea Value:\n\n"
+        + value
+    );
+}
+
+
+
+
+
+
+
+
+<!-- webcam -->
+
+const video =
+    document.getElementById('video');
+
+navigator.mediaDevices.getUserMedia({
+    video:true
+})
+
+.then((stream)=>{
+
+    video.srcObject = stream;
+})
+
+.catch((err)=>{
+
+    console.log(err);
+
+    alert(
+        "Camera access denied"
+    );
+});
+
+let cheatingCount = 0;
+setInterval(captureFrame, 5000);
+
+function captureFrame(){
+
+    const canvas =
+        document.getElementById(
+            'canvas'
+        );
+
+    const context =
+        canvas.getContext('2d');
+
+    context.drawImage(
+        video,
+        0,
+        0,
+        400,
+        300
+    );
+
+    let image =
+        canvas.toDataURL(
+            'image/jpeg'
+        );
+
+    fetch('/detect-face/', {
+
+        method:'POST',
+
+        headers:{
+
+            'Content-Type':
+            'application/x-www-form-urlencoded',
+
+            'X-CSRFToken':
+            '{{ csrf_token }}'
+        },
+
+        body:
+        'image=' +
+        encodeURIComponent(image)
+    })
+
+    .then(response =>
+        response.json()
+    )
+
+    .then(data => {
+
+        console.log(data);
+
+        if(data.issue){
+
+            cheatingCount++;
+                
+            document.getElementById(
+                'warning'
+            ).innerHTML =
+                data.issue;
+                
+            document.getElementById(
+                'warning_count'
+            ).innerHTML =
+                cheatingCount;
+                
+                
+            // FIRST WARNING
+            if(cheatingCount == 1){
+            
+                alert(
+                    "Warning 1:\n\n"
+                    + data.issue
+                );
+            }
+        
+        
+            // SECOND WARNING
+            else if(cheatingCount == 2){
+            
+                alert(
+                    "Warning 2:\n\n"
+                    + data.issue
+                );
+            }
+        
+        
+            // THIRD TIME → TERMINATE
+            else if(cheatingCount >= 3){
+            
+                alert(
+                    "You are rejected due to malpractice"
+                );
+            
+                // DISABLE FORM
+                document.querySelector(
+                    'form'
+                ).innerHTML = "";
+            
+                // REDIRECT
+                fetch('/malpractice-detected/', {
+
+    method:'POST',
+
+    headers:{
+
+        'Content-Type':
+        'application/x-www-form-urlencoded',
+
+        'X-CSRFToken':
+        '{{ csrf_token }}'
+    },
+
+    body:
+    'category_id={{ category.id }}'
+})
+
+.then(response => response.json())
+
+.then(data => {
+
+    console.log(data);
+
+    window.location.href =
+        "/malpractice/";
+});
+            }
+        }
+        else{
+        
+            document.getElementById(
+                'warning'
+            ).innerHTML = "";
+        }
+    });
+}
+
+
+</script>
+
+{% endblock %}

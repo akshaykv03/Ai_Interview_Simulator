@@ -1,0 +1,48 @@
+{% extends 'admin/adminhome.html' %}
+
+{% block content %}
+
+<div class="container mt-5">
+<br><br><br>
+    <h2>Add Interview Question</h2>
+
+    {% if messages %}
+        {% for i in messages %}
+
+            <div class="alert alert-success">
+                {{ i }}
+            </div>
+
+        {% endfor %}
+    {% endif %}
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Request ID</th>
+                <th>User</th>
+                <th>Category</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for req in requests %}
+                <tr>
+                    <td>{{ req.id }}</td>
+                    <td>{{ req.user.username }}</td>
+                    <td>{{ req.category.name }}</td>
+                    <td>{{ req.status }}
+                        <br>
+                        {% if req.status == 'Pending' %}
+                        <a href="/approve-request/{{ req.id }}/" class="btn btn-success">Approve</a>
+                        <a href="/reject-request/{{ req.id }}/" class="btn btn-danger">Reject</a>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+</div>
+
+{% endblock %}

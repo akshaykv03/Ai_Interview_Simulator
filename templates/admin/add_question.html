@@ -1,0 +1,54 @@
+{% extends 'admin/adminhome.html' %}
+
+{% block content %}
+
+<div class="container mt-5">
+<br><br><br>
+    <h2>Add Interview Question</h2>
+
+    {% if messages %}
+        {% for i in messages %}
+
+            <div class="alert alert-success">
+                {{ i }}
+            </div>
+
+        {% endfor %}
+    {% endif %}
+
+    <form method="POST">
+
+        {% csrf_token %}
+
+        <div class="mb-3">
+            {{ form.category.label }}
+            {{ form.category }}
+        </div>
+
+        <div class="mb-3">
+            {{ form.question.label }}
+            {{ form.question }}
+        </div>
+
+        <div class="mb-3">
+            {{ form.correct_answer.label }}
+            {{ form.correct_answer }}
+        </div>
+
+        <div class="mb-3">
+            {{ form.marks.label }}
+            {{ form.marks }}
+        </div>
+
+        <button type="submit"
+                class="btn btn-primary">
+
+            Add Question
+
+        </button>
+
+    </form>
+
+</div>
+
+{% endblock %}
